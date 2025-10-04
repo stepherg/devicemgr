@@ -1,4 +1,4 @@
-# Device Management Layer (Scaffold)
+# Device Management Layer
 
 This package provides a *client-side*, additive Device Management Layer (DML) that unifies:
 
@@ -6,9 +6,9 @@ This package provides a *client-side*, additive Device Management Layer (DML) th
 * Tr1d1um parameter GET/SET (WDMP construction client-side)
 * xconfadmin policy data (future phases)
 
-## Current Scope (Phase 1)
+## Current Scope
 
-Implemented:
+### Phase 1 - Complete ✅
 
 * Core types (`types.go`)
 * Errors (`errors.go`)
@@ -17,15 +17,21 @@ Implemented:
 * WDMP payload builders (`translate/wdmp.go`)
 * DataModel adapter for Tr1d1um translation GET/SET (`runtime/datamodel_adapter.go`)
 * Firmware policy adapter (initial read-only methods) + policy type scaffolding (`policy/`)
-* Example runner (`cmd/example/main.go`)
+* Blizzard JSON-RPC adapter with WebSocket support (`runtime/blizzard_adapter.go`)
+* Discovery API server (`cmd/devicemgr/main.go`)
 
-In Progress / Planned:
+### Phase 2 - Planned
 
-* Settings / Telemetry / Feature policy adapters (stubs present)
-* Orchestrator
-* Caching layers
-* Metrics & tracing
-* Blizzard (JSON-RPC over WebSocket) adapter enhancements (reconnect, metrics)
+* Settings / Telemetry / Feature policy adapters (replace stubs)
+* Blizzard adapter enhancements (automatic reconnect with backoff, heartbeat/ping, metrics)
+* Caching layer with TTL and freshness tagging
+* Row/table WDMP operations (ADD_ROW, REPLACE_ROWS, DELETE_ROW)
+
+### Phase 3 - Future
+
+* Orchestrator for coordinating polling schedules
+* Structured logging and metrics instrumentation
+* OpenTelemetry tracing spans
 
 ## Local Development
 
@@ -57,14 +63,26 @@ _, _ = dmAdapter.Set(ctx, devicemgr.DeviceID("mac:112233445566"), []devicemgr.Se
 
 ```
 
-### Example Runner
+### Discovery API Server
 
-You can run the included example (assumes local Talaria & Tr1d1um with Basic auth token `dXNlcjpwYXNz`):
+You can run the included discovery API server (assumes local Talaria with Basic auth token `dXNlcjpwYXNz`):
 
 ```bash
-cd devicemgr/cmd/example
+cd cmd/devicemgr
 go run .
 ```
+
+Or build and run the binary:
+
+```bash
+go build -o bin/devicemgr ./cmd/devicemgr
+./bin/devicemgr
+```
+
+Environment variables:
+
+* `DEVICEMGR_DISCOVERY_ADDR` - Listen address (default: `:8090`)
+* `DEVICEMGR_POLL_INTERVAL` - Polling interval (default: `15s`)
 
 ## Next Steps
 
@@ -118,17 +136,6 @@ Planned improvements:
 
 See `docs/blizzard_contract.md` for the evolving message contract.
 
-### Blizzard Gateway (Server-Side)
-
-An optional companion service `blizzardgw` (scaffolded in this repository) exposes a public WebSocket JSON-RPC endpoint for clients that should not speak WRP directly. It will:
-
-* Accept JSON-RPC 2.0 calls and forward (future phase) as WRP to devices.
-* Translate upstream device notifications into JSON-RPC notifications.
-* Enforce auth / method policy (planned).
-
-Current scaffold provides an echo dispatcher and synthetic per-request notification. See `blizzardgw/docs/blizzard_gateway.md` for the architectural spec.
-
- 
 ## License
 
 Apache-2.0
